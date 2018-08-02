@@ -11,7 +11,9 @@ import tf
 import cv2
 import yaml
 
+
 STATE_COUNT_THRESHOLD = 3
+
 
 class TLDetector(object):
     def __init__(self):

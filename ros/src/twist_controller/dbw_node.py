@@ -59,7 +59,7 @@ class DBWNode(object):
         # acceleration)
 
         # Create the `Controller` object
-        self.controller = Controller()
+        self.controller = Controller(wheel_base, steer_ratio, max_lat_accel, max_steer_angle)
 
         # Subscribe to all the necessary topics
         self.dbw_enabled_sub = rospy.Subscriber('/vehicle/dbw_enabled',
@@ -78,7 +78,7 @@ class DBWNode(object):
 
     def loop(self):
         rate = rospy.Rate(50) # 50Hz
-        # NOTE: if the is below 10Hz, Carla will disengage (reverting control
+        # NOTE: if the rate is below 10Hz, Carla will disengage (reverting control
         # to the driver)
         # Better ensure that the control commands are published at 50Hz
         while not rospy.is_shutdown():
@@ -89,8 +89,10 @@ class DBWNode(object):
                 self.linear_vel,
                 self.angular_vel,
             )
+            
             if self.dbw_enabled:
                 self.publish(throttle, brake, steer)
+
             rate.sleep()
 
     def publish(self, throttle, brake, steer):

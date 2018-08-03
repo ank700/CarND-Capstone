@@ -3,6 +3,7 @@
 import rospy
 from geometry_msgs.msg import PoseStamped
 from styx_msgs.msg import Lane, Waypoint
+from std_msgs.msg import Int32
 
 import numpy as np
 from scipy.spatial import KDTree
@@ -35,7 +36,9 @@ class WaypointUpdater(object):
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
-        # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
+        # Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
+        rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_waypoint_cb)
+        # TODO: how: rospy.Subscriber('/obstacle_waypoint', Int32, self.obstacle_cb)
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
 
@@ -44,6 +47,7 @@ class WaypointUpdater(object):
         self.base_waypoints = None
         self.waypoints_2d = None
         self.waypoint_tree = None
+        self.traffic_waypoint = None
 
         self.loop()
 
@@ -79,8 +83,9 @@ class WaypointUpdater(object):
     def publish_waypoints(self, closest_idx):
         lane = Lane()
         lane.header = self.base_waypoints.header
-        slc  = slice(closest_idx, closest_idx + LOOKAHEAD_WPS)
-        lane.waypoints = self.base_waypoints.waypoints[slc]
+        # slc  = slice(closest_idx, closest_idx + LOOKAHEAD_WPS)
+        # lane.waypoints = self.base_waypoints.waypoints[slc]
+        lane.waypoints = self.base_waypoints.waypoints[closest_idx:closest_idx + LOOKAHEAD_WPS]
         self.final_waypoints_pub.publish(lane)
 
     def pose_cb(self, msg):
@@ -88,7 +93,7 @@ class WaypointUpdater(object):
 
     def waypoints_cb(self, waypoints):
         self.base_waypoints = waypoints
-        if not self.waypoints_2d:
+        if not self.waypoints_2d:  # Check this in order to avoid a race condition
             self.waypoints_2d = [
                 [waypoint.pose.pose.position.x, waypoint.pose.pose.position.y]
                 for waypoint in waypoints.waypoints
@@ -96,7 +101,9 @@ class WaypointUpdater(object):
             self.waypoint_tree = KDTree(self.waypoints_2d)
 
     def traffic_cb(self, msg):
-        # TODO: Callback for /traffic_waypoint message. Implement
+        self.traffic_waypoint = msg
+
+    def traffic_waypoint_cb(self, msg):
         pass
 
     def obstacle_cb(self, msg):

@@ -32,6 +32,9 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 # NOTE: it GREATLY impacts the performance
 LOOKAHEAD_WPS = 20
 
+# TODO(MD): how to choose the best MAX_DECEL?
+MAX_DECEL = 1
+
 
 class WaypointUpdater(object):
     def __init__(self):
@@ -42,7 +45,6 @@ class WaypointUpdater(object):
 
         # Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
         rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_waypoint_cb)
-        # TODO: how: rospy.Subscriber('/obstacle_waypoint', Int32, self.obstacle_cb)
 
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
 
@@ -96,8 +98,6 @@ class WaypointUpdater(object):
         farthest_idx = closest_idx + LOOKAHEAD_WPS
         base_waypoints = self.base_waypoints.waypoints[closest_idx:farthest_idx]
 
-        rospy.logwarn('stopline_wp_idx = {}'.format(self.stopline_wp_idx))
-
         if self.stopline_wp_idx == -1 or (self.stopline_wp_idx >= farthest_idx):
             lane.waypoints = base_waypoints
         else:
@@ -140,10 +140,6 @@ class WaypointUpdater(object):
     def traffic_waypoint_cb(self, msg):
         self.stopline_wp_idx = msg.data
 
-    def obstacle_cb(self, msg):
-        # TODO: Callback for /obstacle_waypoint message. We will implement it later
-        pass
-
     def get_waypoint_velocity(self, waypoint):
         """
         Gets the linear velocity (x-direction) for a single `waypoint`.
@@ -173,7 +169,7 @@ class WaypointUpdater(object):
         decrease to zero starting some distance from the light).
         """
         dist = 0
-        dl = lambda a, b: math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2  + (a.z-b.z)**2)
+        dl = lambda a, b: math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2 + (a.z-b.z)**2)
         for i in range(wp1, wp2+1):
             dist += dl(waypoints[wp1].pose.pose.position, waypoints[i].pose.pose.position)
             wp1 = i

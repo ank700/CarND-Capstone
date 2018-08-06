@@ -10,7 +10,8 @@ ONE_MPH = 0.44704
 
 
 class Controller(object):
-    def __init__(self, wheel_base, steer_ratio, max_lat_accel, max_steer_angle):
+    def __init__(self, wheel_base, wheel_radius, steer_ratio, max_lat_accel, max_steer_angle,
+                 decel_limit, vehicle_mass):
         self.yaw_controller = YawController(
             wheel_base,
             steer_ratio,
@@ -32,6 +33,10 @@ class Controller(object):
         tau = 0.5  # 1 / (2pi*tau) = cutoff frequency
         ts = 0.02  # Sample time
         self.vel_lpf = LowPassFilter(tau, ts)
+
+        self.wheel_radius = wheel_radius
+        self.decel_limit = decel_limit
+        self.vehicle_mass = vehicle_mass
 
         self.last_time = rospy.get_time()
 

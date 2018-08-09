@@ -10,7 +10,8 @@ ONE_MPH = 0.44704
 
 
 class Controller(object):
-    def __init__(self, wheel_base, steer_ratio, max_lat_accel, max_steer_angle):
+    def __init__(self, wheel_base, wheel_radius, steer_ratio, max_lat_accel, max_steer_angle,
+                 decel_limit, vehicle_mass):
         self.yaw_controller = YawController(
             wheel_base,
             steer_ratio,
@@ -33,6 +34,10 @@ class Controller(object):
         ts = 0.02  # Sample time
         self.vel_lpf = LowPassFilter(tau, ts)
 
+        self.wheel_radius = wheel_radius
+        self.decel_limit = decel_limit
+        self.vehicle_mass = vehicle_mass
+
         self.last_time = rospy.get_time()
 
     def control(self, current_vel, dbw_enabled, linear_vel, angular_vel):
@@ -42,13 +47,13 @@ class Controller(object):
 
         filtered_vel = self.vel_lpf.filt(current_vel)
 
-        rospy.logwarn(
-            '\nAngular vel: {}\n'
-            'Target velocity: {}\n'
-            'Current velocity: {}\n'
-            'Filtered velocity: {}\n'
-            .format(angular_vel, linear_vel, current_vel, filtered_vel)
-        )
+        # rospy.logwarn(
+        #     '\nAngular vel: {}\n'
+        #     'Target velocity: {}\n'
+        #     'Current velocity: {}\n'
+        #     'Filtered velocity: {}\n'
+        #     .format(angular_vel, linear_vel, current_vel, filtered_vel)
+        # )
 
         steering = self.yaw_controller.get_steering(linear_vel, angular_vel, filtered_vel)
 

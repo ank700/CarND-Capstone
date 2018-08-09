@@ -48,6 +48,9 @@ class DBWNode(object):
         max_lat_accel = rospy.get_param('~max_lat_accel', 3.)
         max_steer_angle = rospy.get_param('~max_steer_angle', 8.)
 
+        # TODO(MD): check if the same as WaypointUpdater.MAX_DECEL
+        decel_limit = rospy.get_param('~max_lon_accel', 3.)
+
         self.steer_pub = rospy.Publisher('/vehicle/steering_cmd',
                                          SteeringCmd, queue_size=1)
         self.throttle_pub = rospy.Publisher('/vehicle/throttle_cmd',
@@ -55,11 +58,12 @@ class DBWNode(object):
         self.brake_pub = rospy.Publisher('/vehicle/brake_cmd',
                                          BrakeCmd, queue_size=1)
         # NOTE: To prevent Carla from moving requires about 700 Nm of torque
-        # (can be calculated from the `vehicle_mass`, `wheel_radius`, and desirred
+        # (can be calculated from the `vehicle_mass`, `wheel_radius`, and desired
         # acceleration)
 
         # Create the `Controller` object
-        self.controller = Controller(wheel_base, steer_ratio, max_lat_accel, max_steer_angle)
+        self.controller = Controller(wheel_base, wheel_radius, steer_ratio, max_lat_accel,
+                                     max_steer_angle, decel_limit, vehicle_mass)
 
         # Subscribe to all the necessary topics
         self.dbw_enabled_sub = rospy.Subscriber('/vehicle/dbw_enabled',
@@ -89,7 +93,7 @@ class DBWNode(object):
                 self.linear_vel,
                 self.angular_vel,
             )
-            
+
             if self.dbw_enabled:
                 self.publish(throttle, brake, steer)
 

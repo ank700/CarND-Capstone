@@ -58,7 +58,6 @@ class Controller(object):
         steering = self.yaw_controller.get_steering(linear_vel, angular_vel, filtered_vel)
 
         vel_error = linear_vel - filtered_vel
-        self.last_vel = filtered_vel
 
         current_time = rospy.get_time()
         sample_time = current_time - self.last_time

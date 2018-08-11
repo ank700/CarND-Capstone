@@ -48,9 +48,8 @@ class DBWNode(object):
         max_lat_accel = rospy.get_param('~max_lat_accel', 3.)
         max_steer_angle = rospy.get_param('~max_steer_angle', 8.)
 
-        # TODO(MD): check if the same as WaypointUpdater.MAX_DECEL
         decel_limit = rospy.get_param('~max_lon_accel', 3.)
-
+        
         self.steer_pub = rospy.Publisher('/vehicle/steering_cmd',
                                          SteeringCmd, queue_size=1)
         self.throttle_pub = rospy.Publisher('/vehicle/throttle_cmd',

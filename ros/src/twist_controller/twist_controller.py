@@ -11,7 +11,7 @@ ONE_MPH = 0.44704
 
 class Controller(object):
     def __init__(self, wheel_base, wheel_radius, steer_ratio, max_lat_accel, max_steer_angle,
-                 decel_limit, vehicle_mass, speed_limit):
+                 decel_limit, vehicle_mass):
         self.yaw_controller = YawController(
             wheel_base,
             steer_ratio,
@@ -38,8 +38,6 @@ class Controller(object):
         self.decel_limit = decel_limit
         self.vehicle_mass = vehicle_mass
 
-        self.speed_limit = speed_limit
-
         self.last_time = rospy.get_time()
 
     def control(self, current_vel, dbw_enabled, linear_vel, angular_vel):
@@ -48,9 +46,6 @@ class Controller(object):
             return 0.0, 0.0, 0.0
 
         filtered_vel = self.vel_lpf.filt(current_vel)
-
-        if filtered_vel > self.speed_limit:
-            filtered_vel = self.speed_limit
 
         # rospy.logwarn(
         #     '\nAngular vel: {}\n'

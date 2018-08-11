@@ -30,7 +30,7 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 
 # Number of waypoints we will publish. You can change this number
 # NOTE: it GREATLY impacts the performance
-LOOKAHEAD_WPS = 10
+LOOKAHEAD_WPS = 20
 
 # TODO(MD): how to choose the best MAX_DECEL?
 MAX_DECEL = 1

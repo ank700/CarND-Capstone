@@ -30,7 +30,7 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 
 # Number of waypoints we will publish. You can change this number
 # NOTE: it GREATLY impacts the performance
-LOOKAHEAD_WPS = 20
+LOOKAHEAD_WPS = 10
 
 # TODO(MD): how to choose the best MAX_DECEL?
 MAX_DECEL = 1
@@ -61,8 +61,6 @@ class WaypointUpdater(object):
         rate = rospy.Rate(50)
         while not rospy.is_shutdown():
             if self.pose and self.base_waypoints:
-                # Get closest waypoint
-                closest_waypoint_idx = self.get_closest_waypoint_idx()
                 self.publish_waypoints()
             rate.sleep()
 
@@ -105,16 +103,16 @@ class WaypointUpdater(object):
 
         return lane
 
-    def _decelerate_waypoints(self, waypoints, closest_idx):
+    def _decelerate_waypoints(self, base_waypoints, closest_idx):
         temp = []
-        for i, wp in enumerate(waypoints):
+        for i, wp in enumerate(base_waypoints):
             p = Waypoint()
             p.pose = wp.pose
 
-            # Two waypoints back from line so front of car stops at line
+            # Two base_waypoints back from line so front of car stops at line
             # (-2 is from the center of the car)
             stop_idx = max(self.stopline_wp_idx - closest_idx - 2, 0)
-            dist = self.distance(waypoints, i, stop_idx)
+            dist = self.distance(base_waypoints, i, stop_idx)
             # TODO: consider a different function than sqare root
             vel = math.sqrt(2 * MAX_DECEL * dist)
             if vel < 1.0:
@@ -169,11 +167,14 @@ class WaypointUpdater(object):
         decrease to zero starting some distance from the light).
         """
         dist = 0
-        dl = lambda a, b: math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2 + (a.z-b.z)**2)
-        for i in range(wp1, wp2+1):
-            dist += dl(waypoints[wp1].pose.pose.position, waypoints[i].pose.pose.position)
+        for i in range(wp1+1, wp2+1):
+            dist += self.dist_fn(waypoints[wp1].pose.pose.position, waypoints[i].pose.pose.position)
             wp1 = i
         return dist
+
+    @staticmethod
+    def dist_fn(pos_a, pos_b):
+        return math.sqrt((pos_a.x-pos_b.x)**2 + (pos_a.y-pos_b.y)**2 + (pos_a.z-pos_b.z)**2)
 
 
 if __name__ == '__main__':

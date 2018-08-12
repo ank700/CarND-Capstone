@@ -30,10 +30,17 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 
 # Number of waypoints we will publish. You can change this number
 # NOTE: it GREATLY impacts the performance
+<<<<<<< HEAD
 LOOKAHEAD_WPS = 30
 
 # TODO(MD): how to choose the best MAX_DECEL?
 MAX_DECEL = 0.5
+=======
+LOOKAHEAD_WPS = 20
+
+# TODO(MD): how to choose the best MAX_DECEL?
+MAX_DECEL = 1
+>>>>>>> 2f6f75cade12ae9ddafba0fd91a8941617d48bfc
 
 
 class WaypointUpdater(object):
@@ -62,7 +69,7 @@ class WaypointUpdater(object):
         while not rospy.is_shutdown():
             if self.pose and self.base_lane and self.waypoint_tree:
                 closest_waypoint_idx = self.get_closest_waypoint_idx()
-                self.publish_waypoints(closest_waypoint_idx)
+                self.publish_waypoints()
             rate.sleep()
 
     def get_closest_waypoint_idx(self):
@@ -85,11 +92,19 @@ class WaypointUpdater(object):
             closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
         return closest_idx
 
+<<<<<<< HEAD
     def publish_waypoints(self, closest_waypoint_idx):
         final_lane = self._gen_lane(closest_waypoint_idx)
         self.final_waypoints_pub.publish(final_lane)
 
     def _gen_lane(self, closest_idx):
+=======
+    def publish_waypoints(self):
+        final_lane = self._gen_lane()
+        self.final_waypoints_pub.publish(final_lane)
+
+    def _gen_lane(self):
+>>>>>>> 2f6f75cade12ae9ddafba0fd91a8941617d48bfc
         lane = Lane()
         diff = len(self.waypoints_2d)
         lane.header = self.base_waypoints.header
@@ -98,11 +113,14 @@ class WaypointUpdater(object):
         farthest_idx = closest_idx + LOOKAHEAD_WPS
         base_waypoints = self.base_waypoints.waypoints[closest_idx:farthest_idx]
 
+<<<<<<< HEAD
         if farthest_idx < diff:
             base_waypoints = self.base_lane.waypoints[closest_idx:farthest_idx]
         else:
             base_waypoints = self.base_lane.waypoints[closest_idx:int(diff)] + self.base_lane.waypoints[0:int(farthest_idx % diff)]
 
+=======
+>>>>>>> 2f6f75cade12ae9ddafba0fd91a8941617d48bfc
         if self.stopline_wp_idx == -1 or (self.stopline_wp_idx >= farthest_idx):
             lane.waypoints = base_waypoints
         else:
@@ -110,6 +128,7 @@ class WaypointUpdater(object):
 
         return lane
 
+<<<<<<< HEAD
     def _decelerate_waypoints(self, base_waypoints, closest_idx):
         temp = []
         for i, wp in enumerate(base_waypoints):
@@ -122,6 +141,20 @@ class WaypointUpdater(object):
             dist = self.distance(base_waypoints, i, stop_idx)
             # TODO: consider a different function than sqare root
             vel = np.power(MAX_DECEL * dist * 7, 0.33) * 1.7
+=======
+    def _decelerate_waypoints(self, waypoints, closest_idx):
+        temp = []
+        for i, wp in enumerate(waypoints):
+            p = Waypoint()
+            p.pose = wp.pose
+
+            # Two waypoints back from line so front of car stops at line
+            # (-2 is from the center of the car)
+            stop_idx = max(self.stopline_wp_idx - closest_idx - 2, 0)
+            dist = self.distance(waypoints, i, stop_idx)
+            # TODO: consider a different function than sqare root
+            vel = math.sqrt(2 * MAX_DECEL * dist)
+>>>>>>> 2f6f75cade12ae9ddafba0fd91a8941617d48bfc
             if vel < 1.0:
                 vel = 0
 
@@ -175,8 +208,14 @@ class WaypointUpdater(object):
         decrease to zero starting some distance from the light).
         """
         dist = 0
+<<<<<<< HEAD
         for i in range(wp1+1, wp2+1):
             dist += self.dist_fn(waypoints[wp1].pose.pose.position, waypoints[i].pose.pose.position)
+=======
+        dl = lambda a, b: math.sqrt((a.x-b.x)**2 + (a.y-b.y)**2 + (a.z-b.z)**2)
+        for i in range(wp1, wp2+1):
+            dist += dl(waypoints[wp1].pose.pose.position, waypoints[i].pose.pose.position)
+>>>>>>> 2f6f75cade12ae9ddafba0fd91a8941617d48bfc
             wp1 = i
         return dist
 

@@ -49,7 +49,7 @@ class DBWNode(object):
         max_steer_angle = rospy.get_param('~max_steer_angle', 8.)
 
         decel_limit = rospy.get_param('~max_lon_accel', 3.)
-        
+
         self.steer_pub = rospy.Publisher('/vehicle/steering_cmd',
                                          SteeringCmd, queue_size=1)
         self.throttle_pub = rospy.Publisher('/vehicle/throttle_cmd',

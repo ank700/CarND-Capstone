@@ -30,10 +30,10 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 
 # Number of waypoints we will publish. You can change this number
 # NOTE: it GREATLY impacts the performance
-LOOKAHEAD_WPS = 20
+LOOKAHEAD_WPS = 30
 
 # TODO(MD): how to choose the best MAX_DECEL?
-MAX_DECEL = 1
+MAX_DECEL = 0.5
 
 
 class WaypointUpdater(object):
@@ -60,8 +60,9 @@ class WaypointUpdater(object):
     def loop(self):
         rate = rospy.Rate(50)
         while not rospy.is_shutdown():
-            if self.pose and self.base_waypoints:
-                self.publish_waypoints()
+            if self.pose and self.base_lane and self.waypoint_tree:
+                closest_waypoint_idx = self.get_closest_waypoint_idx()
+                self.publish_waypoints(closest_waypoint_idx)
             rate.sleep()
 
     def get_closest_waypoint_idx(self):
@@ -84,17 +85,23 @@ class WaypointUpdater(object):
             closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
         return closest_idx
 
-    def publish_waypoints(self):
-        final_lane = self._gen_lane()
+    def publish_waypoints(self, closest_waypoint_idx):
+        final_lane = self._gen_lane(closest_waypoint_idx)
         self.final_waypoints_pub.publish(final_lane)
 
-    def _gen_lane(self):
+    def _gen_lane(self, closest_idx):
         lane = Lane()
+        diff = len(self.waypoints_2d)
         lane.header = self.base_waypoints.header
 
         closest_idx = self.get_closest_waypoint_idx()
         farthest_idx = closest_idx + LOOKAHEAD_WPS
         base_waypoints = self.base_waypoints.waypoints[closest_idx:farthest_idx]
+
+        if farthest_idx < diff:
+            base_waypoints = self.base_lane.waypoints[closest_idx:farthest_idx]
+        else:
+            base_waypoints = self.base_lane.waypoints[closest_idx:int(diff)] + self.base_lane.waypoints[0:int(farthest_idx % diff)]
 
         if self.stopline_wp_idx == -1 or (self.stopline_wp_idx >= farthest_idx):
             lane.waypoints = base_waypoints
@@ -111,10 +118,10 @@ class WaypointUpdater(object):
 
             # Two base_waypoints back from line so front of car stops at line
             # (-2 is from the center of the car)
-            stop_idx = max(self.stopline_wp_idx - closest_idx - 2, 0)
+            stop_idx = max(self.stopline_wp_idx - closest_idx - 6, 0)
             dist = self.distance(base_waypoints, i, stop_idx)
             # TODO: consider a different function than sqare root
-            vel = math.sqrt(2 * MAX_DECEL * dist)
+            vel = np.power(MAX_DECEL * dist * 7, 0.33) * 1.7
             if vel < 1.0:
                 vel = 0
 
@@ -128,6 +135,7 @@ class WaypointUpdater(object):
 
     def waypoints_cb(self, waypoints):
         self.base_waypoints = waypoints
+        self.base_lane = waypoints
         if not self.waypoints_2d:  # Check this in order to avoid a race condition
             self.waypoints_2d = [
                 [waypoint.pose.pose.position.x, waypoint.pose.pose.position.y]

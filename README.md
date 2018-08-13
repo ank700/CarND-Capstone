@@ -10,8 +10,8 @@ capable of controlling the Carla, an autonomous Lincoln MKZ.
 ## Team members
 
 * Maciej Dziubinski (ponadto@gmail.com)
-* Ankit Shrivastava (TODO: fill out)
-* Mohamed Ameen (TODO: fill out)
+* Ankit Shrivastava (shrivastavaanki700@gmail.com)
+* Mohamed Ameen (mohamed.a.ameen93@gmail.com)
 
 ## Project structure
 
@@ -62,22 +62,17 @@ The following excerpt from the `tree` command summarizes the structure of the
     └── waypoint_updater.py
 ```
 
-### Details
+### Traffic Light Classification
 
-TODO: place for implementational details (not too many)
+In our first attempt for the traffic light detection, we trained a basic neural network. The network has been implemented in `tl_classifier.py` using tensorflow 1.3. The neural network is shown below:
 
-## Traffic Light detection
+![alt text](imgs/arch.png)
 
-TODO: guys, I leave this part for you ;)
+The neural network has been taken from: https://github.com/kcg2015/traffic_light_detection_classification
 
-### Method
+The training image dataset is a mix of simulator images, udacity rosbag images and some more random images.
 
-TODO: I suspect this is where we'll say a few words about the chosen method
+The model is saved as `frozen_inference_graph.pb` file in `src/tl_detector/ligh
+t_classification/retrained_SSD/`.
 
-### Results
-
-TODO: place for a few images showing how the classifier / detector worked
-
-## Conclusions
-
-TODO: final words
+The output of the classifier is the color of the light – red, green or yellow.

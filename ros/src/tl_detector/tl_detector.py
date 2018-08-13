@@ -13,7 +13,7 @@ import cv2
 import yaml
 
 
-STATE_COUNT_THRESHOLD = 5
+STATE_COUNT_THRESHOLD = 3
 
 TESTING = False
 
@@ -54,7 +54,10 @@ class TLDetector(object):
         self.last_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
-
+        
+        self.prediction_counter = 0
+        self.prev_pred = 0
+        
         rospy.spin()
 
     def pose_cb(self, msg):
@@ -130,12 +133,16 @@ class TLDetector(object):
         if not self.has_image:
             self.prev_light_loc = None
             return False
-
-        cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "rgb8")
-
-        # Get classification
-        pred = self.light_classifier.get_classification(cv_image)
-#         rospy.logwarn('I see RED: {}'.format(pred==0))
+        
+        if self.prediction_counter % 4 == 0:
+            cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "rgb8")
+            pred = self.light_classifier.get_classification(cv_image)
+            self.prev_pred = pred
+        else:
+            pred = self.prev_pred
+            
+        self.prediction_counter += 1
+            
         return pred
 
     def process_traffic_lights(self):

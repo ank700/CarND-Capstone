@@ -118,7 +118,7 @@ class WaypointUpdater(object):
 
             # Two base_waypoints back from line so front of car stops at line
             # (-2 is from the center of the car)
-            stop_idx = max(self.stopline_wp_idx - closest_idx - 6, 0)
+            stop_idx = max(self.stopline_wp_idx - closest_idx - 2, 0)
             dist = self.distance(base_waypoints, i, stop_idx)
             # TODO: consider a different function than sqare root
             vel = np.power(MAX_DECEL * dist * 7, 0.33) * 1.7

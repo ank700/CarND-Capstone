@@ -2,7 +2,7 @@ import tensorflow as tf
 from styx_msgs.msg import TrafficLight
 
 
-PROTOBUG_GRAPH_FILE = 'retrained_SSD/frozen_inference_graph.pb'
+PROTOBUG_GRAPH_FILE = 'light_classification/retrained_SSD/frozen_inference_graph.pb'
 
 
 class TLClassifier(object):

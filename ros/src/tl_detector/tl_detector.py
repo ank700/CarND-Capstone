@@ -2,7 +2,7 @@
 import rospy
 from std_msgs.msg import Int32
 from geometry_msgs.msg import PoseStamped, Pose
-from styx_msgs.msg import TrafficLightArray, TrafficLigh
+from styx_msgs.msg import TrafficLightArray, TrafficLight
 from styx_msgs.msg import Lane
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
@@ -13,10 +13,9 @@ import cv2
 import yaml
 
 
-STATE_COUNT_THRESHOLD = 3
+STATE_COUNT_THRESHOLD = 5
 
-# TODO(MD): find a better way of controlling the testing phase
-TESTING = True
+TESTING = False
 
 
 class TLDetector(object):
@@ -132,10 +131,12 @@ class TLDetector(object):
             self.prev_light_loc = None
             return False
 
-        cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
+        cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "rgb8")
 
         # Get classification
-        return self.light_classifier.get_classification(cv_image)
+        pred = self.light_classifier.get_classification(cv_image)
+#         rospy.logwarn('I see RED: {}'.format(pred==0))
+        return pred
 
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its
